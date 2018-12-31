@@ -15,10 +15,12 @@ let raycaster: Raycaster;
 
 let rollOverMesh: Mesh;
 let rollOverMaterial: Material;
-let cubeGeo: BufferGeometry;
 let cubeMaterial: Material;
 
 var objects: Object3D[] = [];
+
+const blocks: BlockDesignTest[] = [];
+let cubeCollider: Mesh;
 
 // TODO: buffer attribute is view not model data...
 class BlockDesignTest
@@ -94,6 +96,33 @@ function init()
                                       NearestFilter, 
                                       NearestFilter);
 
+    const cube = new BlockShape();
+    cube.AddQuadFace("back",
+                     new Vector3(1, 0, 0), new Vector2(0, 1),
+                     new Vector3(0, 0, 0), new Vector2(1, 1),
+                     new Vector3(0, 1, 0), new Vector2(1, 0),
+                     new Vector3(1, 1, 0), new Vector2(0, 0));
+    cube.AddQuadFace("front",
+                     new Vector3(0, 1, 1), new Vector2(1, 0),
+                     new Vector3(0, 0, 1), new Vector2(1, 1),
+                     new Vector3(1, 0, 1), new Vector2(0, 1),
+                     new Vector3(1, 1, 1), new Vector2(0, 0));
+    cube.AddQuadFace("left",
+                     new Vector3(1, 1, 1), new Vector2(1, 0),
+                     new Vector3(1, 0, 1), new Vector2(1, 1),
+                     new Vector3(1, 0, 0), new Vector2(0, 1),
+                     new Vector3(1, 1, 0), new Vector2(0, 0));
+    cube.AddQuadFace("right",
+                     new Vector3(0, 1, 0), new Vector2(1, 0),
+                     new Vector3(0, 0, 0), new Vector2(1, 1),
+                     new Vector3(0, 0, 1), new Vector2(0, 1),
+                     new Vector3(0, 1, 1), new Vector2(0, 0));
+    cube.AddQuadFace("top",
+                     new Vector3(0, 1, 1), new Vector2(1, 0),
+                     new Vector3(1, 1, 1), new Vector2(1, 1),
+                     new Vector3(1, 1, 0), new Vector2(0, 1),
+                     new Vector3(0, 1, 0), new Vector2(0, 0));
+
     const test = new BlockShape();
     test.AddQuadFace("slope",
                      new Vector3(0, 1, 0), new Vector2(1, 1),
@@ -117,14 +146,21 @@ function init()
                          new Vector3(0, 1, 0), new Vector2(0, 1),
                          new Vector3(0, 0, 0), new Vector2(0, 0));
 
+    const testDesign2 = new BlockDesignTest(cube);
+    testDesign2.setFaceTile("front", ...spriteToCoords(0));
+    testDesign2.setFaceTile("back", ...spriteToCoords(1));
+    testDesign2.setFaceTile("left", ...spriteToCoords(2));
+    testDesign2.setFaceTile("right", ...spriteToCoords(3));
+    testDesign2.geometry.translate(-.5, -.5, -.5);
+
     const testDesign = new BlockDesignTest(test);
     testDesign.setFaceTile("slope", ...spriteToCoords(0));
     testDesign.setFaceTile("left", ...spriteToCoords(1));
     testDesign.setFaceTile("right", ...spriteToCoords(2));
     testDesign.setFaceTile("back", ...spriteToCoords(3));
+    testDesign.geometry.translate(-.5, -.5, -.5);
 
-    const geometry2 = testDesign.geometry;
-    geometry2.translate(-.5, -.5, -.5);
+    blocks.push(testDesign2, testDesign);
 
     camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
     camera.position.set(5, 8, 13);
@@ -140,8 +176,7 @@ function init()
     scene.add( rollOverMesh );
 
     // cubes
-    cubeGeo = geometry2;
-    cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, map: texture } );
+    cubeMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, map: texture } );
 
     // grid
     gridHelper = new THREE.GridHelper(32, 32);
@@ -157,6 +192,9 @@ function init()
     scene.add( plane );
 
     objects.push( plane );
+
+    cubeCollider = new THREE.Mesh(new THREE.CubeGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ visible: false }));
+    scene.add(cubeCollider);
 
     // lights
 
@@ -229,14 +267,29 @@ function onDocumentMouseMove(event: any)
 
     var intersects = raycaster.intersectObjects( objects );
 
-    if (intersects.length > 0 && intersects[0].object === plane)
+    if (intersects.length > 0)
     {
         var intersect = intersects[ 0 ];
 
-        const p = scene.worldToLocal(intersect.point);
-        rollOverMesh.position.copy(p).add( intersect.face!.normal );
-        rollOverMesh.position.floor().addScalar(.5);
-        rollOverMesh.visible = true;
+        if (intersect.object === plane)
+        {
+            const p = scene.worldToLocal(intersect.point);
+            rollOverMesh.position.copy(p).add( intersect.face!.normal );
+            rollOverMesh.position.floor().addScalar(.5);
+            rollOverMesh.visible = true;
+        }
+        else
+        {
+            cubeCollider.position.copy(intersect.object.position);
+            const intersects2 = raycaster.intersectObjects([cubeCollider]);
+            const intersect2 = intersects2[0];
+
+            if (intersect2)
+            {
+                rollOverMesh.position.copy(intersect2.object.position).add(intersect2.face!.normal);
+                rollOverMesh.visible = true;
+            }
+        }
     }
     else
     {
@@ -249,7 +302,7 @@ function onDocumentMouseMove(event: any)
 
 function makeBlock(): Mesh
 {
-    return new THREE.Mesh(cubeGeo, cubeMaterial);
+    return new THREE.Mesh(blocks[randomInt(0, blocks.length - 1)].geometry, cubeMaterial);
 }
 
 function onDocumentMouseDown(event: any) 
@@ -269,17 +322,19 @@ function onDocumentMouseDown(event: any)
 
         // delete cube
 
+        /*
         if ( intersect.object !== plane) 
         {
             scene.remove(intersect.object);
             objects.splice(objects.indexOf( intersect.object ), 1);
         } 
-        else 
+        else
+        */
         {
             var voxel = makeBlock();
             const p = scene.worldToLocal(intersect.point);
-            voxel.position.copy(p).add(intersect.face!.normal);
-            voxel.position.floor().addScalar(.5);
+            voxel.position.copy(rollOverMesh.position);
+
             scene.add( voxel );
 
             voxel.rotateOnAxis(new Vector3(0, 1, 0), randomInt(0, 3) * Math.PI / 2);
