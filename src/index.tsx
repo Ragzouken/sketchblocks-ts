@@ -12,7 +12,6 @@ let plane: Mesh;
 let gridHelper: GridHelper;
 let mouse = new THREE.Vector2();
 let raycaster: Raycaster;
-let isShiftDown = false;
 
 let rollOverMesh: Mesh;
 let rollOverMaterial: Material;
@@ -36,6 +35,7 @@ class BlockDesignTest
         this.geometry = new BufferGeometry();
         // TODO: only make one buffer for a shape's vertices
         this.geometry.addAttribute("position", new Float32BufferAttribute(this.shape.vertices, 3));
+        this.geometry.addAttribute("normal", new Float32BufferAttribute(this.shape.normals, 3));
         this.geometry.addAttribute("uv", this.uvBufferAttribute);
         this.geometry.setIndex(this.shape.indices);
     }
@@ -112,7 +112,6 @@ function init()
                          new Vector3(1, 0, 1), new Vector2(0, 0),
                          new Vector3(1, 0, 0), new Vector2(1, 0));
 
-
     test.AddTriangleFace("right", 
                          new Vector3(0, 0, 1), new Vector2(1, 0),
                          new Vector3(0, 1, 0), new Vector2(0, 1),
@@ -126,41 +125,33 @@ function init()
 
     const geometry2 = testDesign.geometry;
     geometry2.translate(-.5, -.5, -.5);
-    //geometry2.scale(.5, .5, .5);
-    geometry2.scale(50, 50, 50);
-    geometry2.rotateY(+Math.PI / 2);
 
     camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-    camera.position.set( 500, 800, 1300 );
-    camera.lookAt( 0, 0, 0 );
+    camera.position.set(5, 8, 13);
+    camera.lookAt(0, 0, 0);
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color( rgb2num(32, 32, 32) );
 
     // roll-over helpers
-
-    var rollOverGeo = new THREE.BoxBufferGeometry( 50, 50, 50 );
+    var rollOverGeo = new THREE.BoxBufferGeometry(1, 1, 1);
     rollOverMaterial = new THREE.MeshBasicMaterial( { color: 0xffFFFF, opacity: 0.75, transparent: true } );
     rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial );
     scene.add( rollOverMesh );
 
     // cubes
-
-    cubeGeo = geometry2;// new THREE.BoxBufferGeometry( 50, 50, 50 );
-    cubeMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, map: texture } );
+    cubeGeo = geometry2;
+    cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, map: texture } );
 
     // grid
-
-    gridHelper = new THREE.GridHelper( 1000, 20 );
+    gridHelper = new THREE.GridHelper(32, 32);
     scene.add( gridHelper );
-
-    //
 
     raycaster = new THREE.Raycaster();
     mouse = new THREE.Vector2();
 
-    var geometry = new THREE.PlaneBufferGeometry( 1000, 1000 );
-    geometry.rotateX( - Math.PI / 2 );
+    var geometry = new THREE.PlaneBufferGeometry(32, 32);
+    geometry.rotateX(-Math.PI/2);
 
     plane = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { visible: false } ) );
     scene.add( plane );
@@ -196,14 +187,14 @@ function onDocumentKeyDown(event: KeyboardEvent)
 {
     if (event.key == "w")
     {
-        gridHelper.translateY(50);
-        plane.translateY(50);
+        gridHelper.translateY(1);
+        plane.translateY(1);
     }
 
     if (event.key == "s")
     {
-        gridHelper.translateY(-50);
-        plane.translateY(-50);
+        gridHelper.translateY(-1);
+        plane.translateY(-1);
     }
 
     if (event.key == "d")
@@ -238,14 +229,18 @@ function onDocumentMouseMove(event: any)
 
     var intersects = raycaster.intersectObjects( objects );
 
-    if ( intersects.length > 0 ) {
-
+    if (intersects.length > 0 && intersects[0].object === plane)
+    {
         var intersect = intersects[ 0 ];
 
         const p = scene.worldToLocal(intersect.point);
         rollOverMesh.position.copy(p).add( intersect.face!.normal );
-        rollOverMesh.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
-
+        rollOverMesh.position.floor().addScalar(.5);
+        rollOverMesh.visible = true;
+    }
+    else
+    {
+        rollOverMesh.visible = false;
     }
 
     render();
@@ -284,7 +279,7 @@ function onDocumentMouseDown(event: any)
             var voxel = makeBlock();
             const p = scene.worldToLocal(intersect.point);
             voxel.position.copy(p).add(intersect.face!.normal);
-            voxel.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+            voxel.position.floor().addScalar(.5);
             scene.add( voxel );
 
             voxel.rotateOnAxis(new Vector3(0, 1, 0), randomInt(0, 3) * Math.PI / 2);
