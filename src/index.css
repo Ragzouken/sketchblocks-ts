@@ -1,14 +1,360 @@
-body {
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
-}
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+  
+    overflow: hidden;
+    display: flex;
+  
+    width: 100%;
+    height: 100%;
+  
+    background-color: black;
+  }
+  
+  canvas
+  {
+      margin: 0px;
+      width: 100%;
+      height: 100%;
+  }
+  
+  #error
+  {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-256px, -256px);
+  
+      width: 512px;
+      color: white;
+      background-color: darkred;
+  }
+  
+  #error > *
+  {
+      margin: 10px;
+  }
+  
+  button, select
+  {
+      background-color: #FFD800;
+      border: 0;
+      padding: 3px 6px;
+      font-weight: bold;
+      /*-webkit-appearance: none;*/
+  }
+  
+  button:disabled, select:disabled
+  {
+      background-color: rgb(161, 137, 0);
+      color: black;
+  }
+  
+  a
+  {
+      color: #FFD800;
+  }
+  
+  ol
+  {
+      padding-left: 20px;
+      margin: 8px 0px;
+  }
+  
+  ol > li
+  {
+      margin: 8px 0px;
+  }
+  
+  ol > li:last-child
+  {
+      margin: 0px;
+  }
+  
+  em
+  {
+      font-weight: bold;
+      color: #FFD800;
+  }
+  
+  input, textarea
+  {
+      border: 0;
+      background-color: black;
+      color: white;
+      padding: 3px 6px;
+  }
+  
+  input
+  {
+      margin-right: 6px;
+  }
+  
+  #create-scene-button
+  {
+      float: right;
+  }
+  
+  input.full-input
+  {
+      width: calc(100% - 12px);
+  }
+  
+  select.full-input
+  {
+      width: 100%;
+  }
+  
+  button.delete
+  {
+      background-color: rgb(255, 115, 0);
+  }
+  
+  #object-dialogue-input, #import-data
+  {
+      width: calc(100% - 12px);
+  }
+  
+  #editor-button
+  {
+      position: absolute;
+      top: 32px;
+      left: 32px;
+  }
+  
+  #delete-scene-button
+  {
+      float: right;
+  }
+  
+  .rename-delete
+  {
+      display: flex;
+  }
+  
+  .rename-delete > input
+  {
+      flex: 1;
+      min-width: 0;
+  }
+  
+  button
+  {
+      padding: 4px 8px;
+  }
+  
+  .button-row
+  {
+      margin: -4px;
+      display: flex;
+  }
+  
+  .button-row > button
+  {
+      margin: 4px;
+      flex: 1;
+  }
+  
+  .line-tabs
+  {
+      margin: 12px;
+      display: flex;
+      flex-flow: row wrap;
+  }
+  
+  .line-tabs > button
+  {
+      flex: 1;
+      margin: 4px;
+  }
+  
+  /* width */
+  ::-webkit-scrollbar {
+      color: black;
+  }
+  
+  /* Track */
+  ::-webkit-scrollbar-track {
+      background: #754d6d;
+      border-left: solid 1px black; 
+  }
+  
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+      background:  rgb(180, 157, 27);
+      border-left: solid 1px black; 
+  }
+  
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+      background: #FFD800; 
+  }
+  
+  .right-pair
+  {
+      display: flex;
+  }
+  
+  .right-pair > *:first-child 
+  {
+      flex: 1;
+      min-width: 0;
+      margin-right: 6px;
+  }
+  
+  #sidebar
+  {
+      width: 320px;
+  
+      color: white;
+      background-color: #792368;
+  
+      flex: none;
+  
+      overflow-x: hidden;
+      overflow-y: scroll;
+  }
+  
+  .section 
+  {
+      margin: 16px;
+      padding: 16px;
+      background-color: #367b6b;
+  }
+  
+  #tabs
+  {
+      margin: 12px;
+      display: flex;
+      flex-flow: row wrap;
+  }
+  
+  #tabs > button
+  {
+      margin: 4px;
+      flex: 0 1;
+      white-space: nowrap;
+  }
+  
+  .size-select
+  {
+      margin: -4px;
+      display: flex;
+  }
+  
+  .size-select > *
+  {
+      margin: 4px;
+      flex: 1;
+  }
+  
+  .size-select > div
+  {
+      flex: 0;
+  }
+  
+  .size-select > button
+  {
+      flex: 0;
+  }
+  
+  .section-buttons
+  {
+      margin: -4px;
+      display: flex;
+      flex-flow: row wrap;
+  }
+  
+  .section-buttons > button
+  {
+      margin: 4px;
+      flex: 0 0;
+  }
+  
+  #dialogue-preview
+  {
+      float: right;
+  }
+  
+  #object-drawing-select, #object-scene-select
+  {
+      width: 100%;
+  }
+  
+  .section > h1
+  {
+      color: #FFD800;
+      font-size: 1.5em;
+      margin-top: 0;
+  }
+  
+  .section > h2
+  {
+      font-size: 1em;
+      font-weight: bold;
+      color: #cef0df;
+  
+      margin-bottom: .25em;
+  }
+  
+  .section > p
+  {
+      margin-bottom: 0;
+  }
+  
+  select
+  {
+      flex: 1;
+  }
+  
+  #container
+  {
+      flex: 1;
+      overflow: hidden;
+  }
+  
+  #palette
+  {
+    display: grid;
+    padding: 4px;
+    grid-gap: 4px;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  #palette > button
+  {
+    width: 48px;
+    height: 48px;
+    background-color: greenyellow;
+    border: 2px solid #4CAF50;
+  
+    color: white;
+  }
+  
+  #brushes
+  {
+    display: grid;
+    padding: 4px;
+    grid-gap: 4px;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  #brushes > div
+  {
+    width: 48px;
+    height: 48px;
+  
+    background-color: pink;
+  }
+  
+  #brushes > div > button
+  {
+    width: 100%;
+    height: 100%;
+    background-color: greenyellow;
+    border: 2px solid #4CAF50;
+    
+    margin: 0px;
+  }
+  

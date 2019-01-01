@@ -1,13 +1,13 @@
 import './index.css';
 import * as THREE from 'three';
-import { Scene, WebGLRenderer, Mesh, PerspectiveCamera, Raycaster, Material, Object3D, CanvasTexture, NearestFilter, BufferGeometry, Float32BufferAttribute, ClampToEdgeWrapping, Vector2, Vector3, FaceColors, BufferAttribute, Geometry, GridHelper } from 'three';
+import { Scene, WebGLRenderer, Mesh, PerspectiveCamera, Raycaster, Material, Object3D, CanvasTexture, NearestFilter, BufferGeometry, Float32BufferAttribute, ClampToEdgeWrapping, Vector2, Vector3, FaceColors, BufferAttribute, Geometry, GridHelper, OneMinusDstAlphaFactor } from 'three';
 import { MTexture } from './MTexture';
-import { rgb2num, randomInt, rgb2hex, num2rgb, lerp } from './utility';
+import { rgb2num, randomInt, rgb2hex, num2rgb, lerp, getElement } from './utility';
 import { BlockShape } from './Blocks';
+import SketchblocksEditor from './ui/SketchblocksEditor';
 
-let camera: PerspectiveCamera;
-let scene: Scene;
-let renderer: WebGLRenderer;
+const editor = new SketchblocksEditor();
+
 let plane: Mesh;
 let gridHelper: GridHelper;
 let mouse = new THREE.Vector2();
@@ -60,9 +60,19 @@ class BlockDesignTest
     }
 }
 
+const spriteCount = 4;
+
+function spriteToCoords(offset: number): [number, number, number, number]
+{
+    const factor = 1 / spriteCount;
+
+    return [(offset + 0) * factor, 0, 
+            (offset + 1) * factor, 1]
+}
+
 function init() 
 {
-    const spriteCount = 4;
+    
 
     // texture
     const mtexture = new MTexture(spriteCount * 16, 16);
@@ -73,20 +83,19 @@ function init()
                     rgb2num(  0, 128, 128),
                     rgb2num(128, 128,   0)];
 
+    mtexture.plot((x, y) =>
+    {
+        const i = Math.floor(x / 16);
+
+        return colors[(i + randomInt(0, 1)) % colors.length];
+    });
+
     for (let i = 0; i < spriteCount; ++i)
     {
-        mtexture.context.fillStyle = "#FFFFFF";
-        mtexture.context.fillRect(i * 16, 0, 16, 16);
-        mtexture.context.fillStyle = rgb2hex(num2rgb(colors[i]));
-        mtexture.context.fillRect(i * 16 + 1, 1, 14, 14);
-    }
-
-    function spriteToCoords(offset: number): [number, number, number, number]
-    {
-        const factor = 1 / spriteCount;
-
-        return [(offset + 0) * factor, 0, 
-                (offset + 1) * factor, 1]
+        //mtexture.context.strokeStyle = "#FFFFFF";
+        //mtexture.context.strokeRect(i * 16 + .5, .5, 15, 15);
+        //mtexture.context.fillStyle = rgb2hex(num2rgb(colors[i]));
+        //mtexture.context.fillRect(i * 16 + 1, 1, 14, 14);
     }
 
     const texture = new CanvasTexture(mtexture.canvas, 
@@ -148,9 +157,11 @@ function init()
 
     const testDesign2 = new BlockDesignTest(cube);
     testDesign2.setFaceTile("front", ...spriteToCoords(0));
-    testDesign2.setFaceTile("back", ...spriteToCoords(1));
-    testDesign2.setFaceTile("left", ...spriteToCoords(2));
-    testDesign2.setFaceTile("right", ...spriteToCoords(3));
+    testDesign2.setFaceTile("back", ...spriteToCoords(0));
+    testDesign2.setFaceTile("left", ...spriteToCoords(1));
+    testDesign2.setFaceTile("right", ...spriteToCoords(1));
+    testDesign2.setFaceTile("top", ...spriteToCoords(2));
+    //testDesign2.setFaceTile("bottom", ...spriteToCoords(0));
     testDesign2.geometry.translate(-.5, -.5, -.5);
 
     const testDesign = new BlockDesignTest(test);
@@ -162,25 +173,18 @@ function init()
 
     blocks.push(testDesign2, testDesign);
 
-    camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-    camera.position.set(5, 8, 13);
-    camera.lookAt(0, 0, 0);
-
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color( rgb2num(32, 32, 32) );
-
     // roll-over helpers
     var rollOverGeo = new THREE.BoxBufferGeometry(1, 1, 1);
     rollOverMaterial = new THREE.MeshBasicMaterial( { color: 0xffFFFF, opacity: 0.75, transparent: true } );
     rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial );
-    scene.add( rollOverMesh );
+    editor.scene.add( rollOverMesh );
 
     // cubes
     cubeMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, map: texture } );
 
     // grid
     gridHelper = new THREE.GridHelper(32, 32);
-    scene.add( gridHelper );
+    editor.scene.add( gridHelper );
 
     raycaster = new THREE.Raycaster();
     mouse = new THREE.Vector2();
@@ -189,26 +193,21 @@ function init()
     geometry.rotateX(-Math.PI/2);
 
     plane = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { visible: false } ) );
-    scene.add( plane );
+    editor.scene.add( plane );
 
     objects.push( plane );
 
     cubeCollider = new THREE.Mesh(new THREE.CubeGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ visible: false }));
-    scene.add(cubeCollider);
+    editor.scene.add(cubeCollider);
 
     // lights
 
     var ambientLight = new THREE.AmbientLight( 0x606060 );
-    scene.add( ambientLight );
+    editor.scene.add( ambientLight );
 
     var directionalLight = new THREE.DirectionalLight( 0xffffff );
     directionalLight.position.set( 1, 0.75, 0.5 ).normalize();
-    scene.add( directionalLight );
-
-    renderer = new THREE.WebGLRenderer({antialias: false});
-    renderer.setPixelRatio( window.devicePixelRatio );
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    document.body.appendChild( renderer.domElement );
+    editor.scene.add( directionalLight );
 
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     document.addEventListener( 'mousedown', onDocumentMouseDown, false );
@@ -223,6 +222,8 @@ function init()
 
 function onDocumentKeyDown(event: KeyboardEvent)
 {
+    console.log(event.key);
+
     if (event.key == "w")
     {
         gridHelper.translateY(1);
@@ -237,33 +238,39 @@ function onDocumentKeyDown(event: KeyboardEvent)
 
     if (event.key == "d")
     {
-        scene.rotateOnAxis(new Vector3(0, 1, 0), -Math.PI / 8);
+        editor.scene.rotateOnAxis(new Vector3(0, 1, 0), -Math.PI / 8);
     }
 
     if (event.key == "a")
     {
-        scene.rotateOnAxis(new Vector3(0, 1, 0), Math.PI / 8);
+        editor.scene.rotateOnAxis(new Vector3(0, 1, 0), Math.PI / 8);
     }
 
-    render();
+    if (event.key == "p")
+    {
+        blocks[0].setFaceTile("top", ...spriteToCoords(randomInt(0, 3)));
+        blocks[0].uvBufferAttribute.needsUpdate = true;
+    }
+
+    editor.render();
 }
 
 function onWindowResize() {
 
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
+    editor.camera.aspect = window.innerWidth / window.innerHeight;
+    editor.camera.updateProjectionMatrix();
 
-    renderer.setSize( window.innerWidth, window.innerHeight );
-
+    editor.renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
 function onDocumentMouseMove(event: any) 
 {
     event.preventDefault();
+    const [mx, my] = getMousePosition(event);
+    //event.target.width
+    mouse.set( ( mx ) * 2 - 1, - ( my ) * 2 + 1 );
 
-    mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
-
-    raycaster.setFromCamera( mouse, camera );
+    raycaster.setFromCamera( mouse, editor.camera );
 
     var intersects = raycaster.intersectObjects( objects );
 
@@ -273,9 +280,8 @@ function onDocumentMouseMove(event: any)
 
         if (intersect.object === plane)
         {
-            const p = scene.worldToLocal(intersect.point);
-            rollOverMesh.position.copy(p).add( intersect.face!.normal );
-            rollOverMesh.position.floor().addScalar(.5);
+            const p = editor.scene.worldToLocal(intersect.point);
+            rollOverMesh.position.copy(p).floor().addScalar(.5).setY(.5);
             rollOverMesh.visible = true;
         }
         else
@@ -296,7 +302,7 @@ function onDocumentMouseMove(event: any)
         rollOverMesh.visible = false;
     }
 
-    render();
+    editor.render();
 
 }
 
@@ -305,53 +311,32 @@ function makeBlock(): Mesh
     return new THREE.Mesh(blocks[randomInt(0, blocks.length - 1)].geometry, cubeMaterial);
 }
 
-function onDocumentMouseDown(event: any) 
+function getMousePosition(event: any): [number, number]
 {
+    // e = Mouse click event.
+    var rect = event.target.getBoundingClientRect();
+    var x = event.clientX - rect.left; //x position within the element.
+    var y = event.clientY - rect.top;  //y position within the element.
 
-    event.preventDefault();
-
-    mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
-
-    raycaster.setFromCamera( mouse, camera );
-
-    var intersects = raycaster.intersectObjects( objects );
-
-    if (intersects.length > 0) 
-    {
-        var intersect = intersects[ 0 ];
-
-        // delete cube
-
-        /*
-        if ( intersect.object !== plane) 
-        {
-            scene.remove(intersect.object);
-            objects.splice(objects.indexOf( intersect.object ), 1);
-        } 
-        else
-        */
-        {
-            var voxel = makeBlock();
-            const p = scene.worldToLocal(intersect.point);
-            voxel.position.copy(rollOverMesh.position);
-
-            scene.add( voxel );
-
-            voxel.rotateOnAxis(new Vector3(0, 1, 0), randomInt(0, 3) * Math.PI / 2);
-
-            objects.push( voxel );
-        }
-
-        render();
-
-    }
-
+    return [x / rect.width, y / rect.height];
 }
 
-function render() 
+function onDocumentMouseDown(event: any) 
 {
-    renderer.render( scene, camera );
+    event.preventDefault();
+
+    {
+        var voxel = makeBlock();
+        
+        voxel.position.copy(rollOverMesh.position);
+
+        editor.scene.add(voxel);
+        voxel.rotateOnAxis(new Vector3(0, 1, 0), randomInt(0, 3) * Math.PI / 2);
+        objects.push(voxel);
+    }
+
+    editor.render();
 }
 
 init();
-render();
+editor.render();

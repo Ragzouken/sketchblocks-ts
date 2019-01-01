@@ -1,41 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
-    <meta name="theme-color" content="#000000" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
     <!--
       manifest.json provides metadata used when your web app is added to the
-      homescreen on Android. See https://developers.google.com/web/fundamentals/web-app-manifest/
+      homescreen on Android. See https://developers.google.com/web/fundamentals/engage-and-retain/web-app-manifest/
     -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
+    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
+    <title>blocksy</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+    <noscript>
+        flicksy requires javascript and a modern graphical browser
+    </noscript>
+    <div id="sidebar">
+        <nav id="tabs">
+            <button id="info-tab-button">project</button>
+            <button id="drawing-tab-button">drawings</button> 
+            <button id="scene-tab-button">scene</button>
+            <button id="scene-maps-tab-button">map</button>
+            <button id="playtest-button" title="Playtest this game">play</button> 
+            <button id="save" title="Save the project in the browser">save</button>
+            <button id="publish-tab-button">publish</button> 
+        </nav>
+        <div id="info" class="panel">
+        </div>
+        <div id="publish" class="panel" hidden>
+            <div class="section">
+                <h1>publish</h1>
+                <h2>publish your flicksy game on itch.io</h2>    
+                <ol>
+                    <li>click the <em>playable html</em> button in the <em>export</em> section below to download the game</li>
+                    <li>create an account on itch.io (<a href="https://itch.io/register">click here</a>)</li>
+                    <li>create a new project on itch.io (<a href="https://itch.io/game/new">click here</a>)</li>
+                    <li>enter your game's <em>Title</em></li>
+                    <li>set the <em>Kind of project</em> to <em>HTML</em></li>
+                    <li>in the <em>Uploads</em> section, click <em>Upload files</em> and find the playable html file on your computer</li>
+                    <li>in the <em>Embed options</em> section, set the dropdown to <em>Click to launch in fullscreen</em> and check the <em>Mobile friendly</em> box</em></li>
+                    <li>scroll down and click <em>Save & view page</em></li>
+                    <li>if everything is working, go back and in the <em>Visibility & access</em> section, set your game to <em>Public</em></li>
+                </ol>
+            </div>
+            <div class="section">
+                <h1>export</h1>
+                <div class="section-buttons">
+                    <button id="download-data" title="Download the project as text file">project data</button>
+                    <button id="download" title="Download a zip of the drawings as image files">drawing images</button>
+                    <button id="export-playable" title="Download a playable html file">playable html</button>
+                </div>
+            </div>
+            <div class="section">
+                <h1>export zip with music</h1>
+                <input type="file"
+                       accept="audio/*" 
+                       title="music to embed in the game (doesn't save to project)"
+                       id="export-audio">
+                <button id="export-zip" title="Download a zip with a playable html file and bundled music file">playable html+music zip</button>
+            </div>
+        </div>
+        <div id="drawing-sidebar" class="panel" hidden>
+            <div class="section">
+                <h1>drawing boards tab</h1>
+                <h2>getting started</h2>    
+                <ol>
+                    <li>create a drawing using the <em>drawing board</em> section below</li>
+                    <li>click the <em>draw</em> button to enter the drawing mode</li>
+                    <li>pick a brush size and colour to draw in</li>
+                    <li>click and drag on a drawing to draw on it</li>
+                </ol>
+            </div>
+            <div class="section">
+                <h1>drawing board</h1>
+                
+                <h2>create drawing</h2>
+                <div class="size-select">
+                <select id="create-drawing-width" title="Width of the drawing to create">
+                    <option value="24">24px</option>
+                    <option value="32">32px</option>
+                    <option value="48">48px</option>
+                    <option value="64">64px</option>
+                    <option value="160">160px</option>
+                </select>
+                <div>x</div>
+                <select id="create-drawing-height" title="Height of the drawing to create">
+                    <option value="24">24px</option>
+                    <option value="32">32px</option>
+                    <option value="48">48px</option>
+                    <option value="64">64px</option>
+                    <option value="100">100px</option>
+                </select>
+                
+                <button id="create-drawing-button" title="Create a new drawing and add it to this drawing board">create</button>
+                </div>
+            </div>
+            <div class="line-tabs">
+                <button id="drawing-select-button" title="Switch to select mode, in which you can select drawings and drag them around">select & move</button>
+                <button id="drawing-draw-button" title="Switch to draw mode, in which you can edit drawings">draw</button>
+            </div>
+            <div class="section" id="selected-drawing-section">
+                <h1>selected drawing</h1>
+                <h2>name</h2>
+                <div class="rename-delete">
+                    <input id="drawing-name" title="Name of the selected drawing">
+                    <button id="delete-drawing-button" class="delete" title="Delete the selected drawing">delete</button>
+                </div>
+                <h2>layering</h2>
+                <div class="button-row">
+                    <button id="pin-higher" title="Raise this drawing further in front">raise</button>
+                    <button id="pin-lower" title="Lower this drawing further behind">lower</button>
+                </div>
+            </div>
+            <div class="section" id="brush-settings">
+                <h1>brush settings</h1>
+                <h2>size</h2>
+                <div id="brushes">
+                    <div><button title="Use single pixel brush">1px</button></div>
+                    <div><button title="Use 2px diameter brush">2px</button></div>
+                    <div><button title="Use 3px diameter brush">3px</button></div>
+                    <div><button title="Use 4px diameter brush">4px</button></div>
+                </div>
+                <h2>color</h2>
+                <div id="palette">
+                    <button title="Erase instead of drawing">X</button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                    <button></button>
+                </div>
+                <h2>modify palette</h2>
+                <input type="color" id="color-input"><button id="reset-palette" title="Replace all the palette with random colours">randomise palette</button>
+            </div>
+        </div>
+        <div id="scene-sidebar" class="panel" hidden>
+            <div class="section">
+                <h1>scenes tab</h1>
+                <h2>getting started</h2>    
+                <ol>
+                    <li>create an object using the <em>pick drawing</em> button in the <em>scene</em> section below</li>
+                    <li>click and drag the object to position it within the scene</li>
+                    <li>type some dialogue into the <em>selected object</em> section below</li>
+                    <li>click the <em>play</em> button above and click on your object!</li>
+                </ol>
+            </div>
+            <div class="section">
+                <h1 id="scene-tab-scene-name" title="Name of the currently open scene">active scene</h1>
+                
+                <h2>change scene</h2>
+                <button id="scene-view-in-map-button" title="View this scene in the scene map tab">view in scene map</button>
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+                <h2>add object</h2>
+                <button id="create-object-drawing-picker-button" title="Add a new object to this scene by choosing visually from the drawings in this project">pick drawing</button>
+            </div>
+            <div class="section" id="selected-object-section">
+                <h1>selected object</h1>
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
+                <h2>name</h2>
+                <div class="rename-delete">
+                    <input id="object-name" title="Rename the selected object">
+                    <button id="delete-object-button" class="delete" title="Delete the selected object">delete</button>
+                </div>
+
+                <h2>drawing</h2>
+                <button id="object-pick-drawing-button" title="Pick drawing by browsing drawing boards">pick drawing</button>
+
+                <h2>layering</h2>
+                <div class="button-row">
+                    <button id="object-higher" title="Raise this object further in front">raise</button>
+                    <button id="object-lower" title="Lower this object further behind">lower</button>
+                </div>
+
+                <h2>
+                    <label id="dialogue-preview">preview <input type="checkbox" id="show-dialogue-toggle" title="Show a visual preview of the object's dialogue"></label>
+                    dialogue
+                </h2>
+                <textarea id="object-dialogue-input" rows="8" title="The dialogue to show after clicking this object"></textarea>
+                
+                <h2>scene change</h2>
+                <button id="object-scene-change-button" title="The scene to go to after clicking this object and closing any dialogue">nothing</button>
+            </div>
+        </div>
+        <div id="scene-maps-sidebar" class="panel" hidden>
+            <div class="section">
+                <h1>scene map tab</h1>
+                <h2>getting started</h2>    
+                <ol>
+                    <li>create a scene using the <em>scenes</em> section below</li>
+                    <li>click and drag to reposition scenes for easier reference</li>
+                    <li>double click a scene to open it in the scene editor tab</li>
+                </ol>
+            </div>
+            <div class="section">
+                <button id="create-scene-button" title="Add a new empty scene to the project">new scene</button>
+                <h1>scenes</h1>
+                <h2>starting scene</h2>
+                <button id="project-start-scene" title="Change the starting scene for this project">nothing</button>
+                <h2>previews</h2>
+                <button id="scene-map-regenerate" title="Regenerate scene previews">regenerate</button>
+            </div>
+            <div class="section" id="selected-scene-section">
+                <h1>selected scene</h1>
+
+                <h2>name</h2>
+                <input id="scene-name2" class="full-input" title="Rename the selected scene">
+
+                <h2>edit</h2>
+                <div class="button-row">
+                    <button id="scene-map-open-button" title="Open the selected scene in the scene tab">open</button>
+                    <button id="scene-map-duplicate-button" title="Create a copy of the selected scene">duplicate</button>
+                    <button id="delete-scene-button" class="delete" title="Delete the selected scene">delete</button>
+                </div>
+
+                <h2>layering</h2>
+                <div class="button-row">
+                    <button id="scene-higher" title="Raise this scene further in front">raise</button>
+                    <button id="scene-lower" title="Lower this scene further behind">lower</button>
+                </div>
+            </div>
+        </div>
+        <div id="picker-sidebar" hidden>
+            <section class="section">
+                <h1 id="picker-heading">pick scene</h1>
+                <h2>context</h2>
+                <div id="picker-context">pick a scene for object #69</div>
+                <h2>search</h2>
+                <div class="rename-delete">
+                    <input id="picker-query-input" title="Highlight elements that match the search query">
+                    <button id="picker-query-cancel" title="Reset the search query so nothing is highlighted">reset</button>
+                </div>
+            </section>
+        </div>
+        <div id="react"></div>
+    </div>
+    <div id="container">
+        <div id="root"></div>
+    </div>
+    <button id="editor-button" title="Exit playtesting and resume editing" hidden>editor</button>
+    <div id="error" hidden>
+        <h1>flicksy has broken</h1>
+        <p id="error-description">
+            a bug within flicksy has caused it to malfunction. please report
+            this issue to me 
+            <ul>
+                <li>either <a href="https://ragzouken.com/twitter">on twitter</a></li>
+                <li>or by email at <a href="mailto:ragzouken@gmail.com">ragzouken@gmail.com</a></li>
+                <li>or on the <a href="https://github.com/Ragzouken/flicksy/issues">flicksy github</a></li>
+            </ul>
+        </p>
+        <h2>detail</h2>
+        <pre id=error-traceback></pre>
+    </div>
   </body>
 </html>
