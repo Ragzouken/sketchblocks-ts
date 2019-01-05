@@ -24,6 +24,7 @@ class BlockView implements View<Block>
     public refresh(): void
     {
         this.mesh.position.copy(this.model.position).addScalar(.5);
+        this.mesh.setRotationFromAxisAngle(new Vector3(0, 1, 0), this.model.orientation * Math.PI / 2);
         this.mesh.geometry = this.stageView.editor.testBlockDesigns[this.model.designID % 2].geometry;
     }
 
@@ -52,6 +53,11 @@ export default class StageView
     {
         this.stage = stage;
         this.refresh();
+    }
+
+    public refreshBlock(block: Block)
+    {
+        this.blocks.get(block)!.refresh();
     }
 
     public refresh(): void

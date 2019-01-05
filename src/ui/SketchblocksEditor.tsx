@@ -60,10 +60,14 @@ export default class SketchblocksEditor
     public testBlockDesigns: BlockDesignTest[] = [];
 
     private readonly testCursorCube: Mesh;
+    private readonly testPlaceCube: Mesh;
     private readonly testObjects: Object3D[] = [];
 
     private readonly gridCollider: Mesh;
     private readonly cubeCollider: Mesh;
+
+    private cursorPosition = new Vector3(0, 0, 0);
+    private placePosition = new Vector3(0, 0, 0);
 
     public constructor()
     {
@@ -73,6 +77,18 @@ export default class SketchblocksEditor
         const keydown = (event: any) =>
         {
             this.keys[event.key] = true;
+
+            if (event.key === "[")
+            {
+                const id = this.cursorPosition.toArray().join(",");
+                const block = this.stageView.stage.blocks.get(id);
+
+                if (block)
+                {
+                    block.orientation += 1;
+                    this.stageView.refreshBlock(block);
+                }
+            }
         }
 
         const keyup = (event: any) =>
@@ -221,6 +237,11 @@ export default class SketchblocksEditor
         this.testCursorCube = new Mesh(cursorGeometry, cursorMaterial);
         this.scene.add(this.testCursorCube);
 
+        const placeGeometry = new BoxBufferGeometry(.3, .3, .3);
+        const placeMaterial = new MeshBasicMaterial({ color: 0xffFFFF, opacity: 0.9, transparent: true })
+        this.testPlaceCube = new Mesh(placeGeometry, placeMaterial);
+        this.scene.add(this.testPlaceCube);
+
         // floor
         const gridColliderGeometry = new PlaneBufferGeometry(16, 16);
         gridColliderGeometry.rotateX(-Math.PI/2);
@@ -340,7 +361,9 @@ export default class SketchblocksEditor
             if (intersect.object === this.gridCollider)
             {
                 const p = this.scene.worldToLocal(intersect.point);
-                this.testCursorCube.position.copy(p).floor().addScalar(.5).setY(.5);
+
+                this.cursorPosition.copy(p).floor().setY(-1);
+                this.placePosition.copy(this.cursorPosition).setY(0);
                 this.testCursorCube.visible = true;
             }
             else
@@ -351,9 +374,14 @@ export default class SketchblocksEditor
 
                 if (intersect2)
                 {
-                    this.testCursorCube.position.copy(intersect2.object.position);
-                    //.add(intersect2.face!.normal);
+                    this.cursorPosition.copy(intersect2.object.position).floor();
+                    this.placePosition.copy(this.cursorPosition).add(intersect2.face!.normal);
                     this.testCursorCube.visible = true;
+                    this.testPlaceCube.visible = true;
+                }
+                else
+                {
+                    this.testPlaceCube.visible = false;
                 }
             }
         }
@@ -361,6 +389,15 @@ export default class SketchblocksEditor
         {
             this.testCursorCube.visible = false;
         }
+
+        const id = this.placePosition.toArray().join(",");
+        if (this.stageView.stage.blocks.get(id))
+        {
+            this.testPlaceCube.visible = false;
+        }
+
+        this.testCursorCube.position.copy(this.cursorPosition).addScalar(.5);
+        this.testPlaceCube.position.copy(this.placePosition).addScalar(.5);
     }
 
     private getMousePosition(event: any): [number, number]
@@ -376,15 +413,17 @@ export default class SketchblocksEditor
     private onDocumentMouseDown(event: any) 
     {
         if (event.target !== this.renderer.domElement) return;
+        if (!this.testPlaceCube.visible) return;
 
         event.preventDefault();
 
-        var voxel = this.testMakeBlock();
-        
-        voxel.position.copy(this.testCursorCube.position);
-
-        this.scene.add(voxel);
-        voxel.rotateOnAxis(new Vector3(0, 1, 0), randomInt(0, 3) * Math.PI / 2);
-        this.testObjects.push(voxel);
+        const id = this.placePosition.toArray().join(",");
+        const block =  {
+            designID: this.block,
+            orientation: 0,
+            position: this.placePosition.clone(),
+        };
+        this.stageView.stage.blocks.set(id, block);
+        this.stageView.refresh();
     }
 }
