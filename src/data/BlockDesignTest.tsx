@@ -1,6 +1,6 @@
 import { BufferGeometry, Float32BufferAttribute, BufferAttribute } from 'three';
-import { lerp } from './tools/utility';
-import { BlockShape } from './data/Blocks';
+import { lerp } from '../tools/utility';
+import { BlockShape } from '../data/Blocks';
 
 // TODO: buffer attribute is view not model data...
 export class BlockDesignTest 

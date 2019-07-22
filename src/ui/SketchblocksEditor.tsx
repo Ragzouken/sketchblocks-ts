@@ -1,6 +1,6 @@
 import { WebGLRenderer, PerspectiveCamera, Scene, Color, Vector3, Clock, Vector2, Euler, Material, CanvasTexture, ClampToEdgeWrapping, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, BoxBufferGeometry, Object3D, PlaneBufferGeometry, CubeGeometry, GridHelper, AmbientLight, DirectionalLight } from 'three';
 import { getElement, randomInt, rgb2num } from '../tools/utility';
-import { BlockDesignTest } from '../BlockDesignTest';
+import { BlockDesignTest } from '../data/BlockDesignTest';
 import { MTexture } from '../tools/MTexture';
 import { BlockShape } from '../data/Blocks';
 import { makeRandomStage } from '../data/Stage';
@@ -71,6 +71,7 @@ export default class SketchblocksEditor
 
     public constructor()
     {
+        //
         this.clock = new Clock();
 
         // keys
